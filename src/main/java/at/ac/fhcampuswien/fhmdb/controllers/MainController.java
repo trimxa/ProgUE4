@@ -2,6 +2,8 @@ package at.ac.fhcampuswien.fhmdb.controllers;
 
 import at.ac.fhcampuswien.fhmdb.enums.UIComponent;
 import at.ac.fhcampuswien.fhmdb.models.Movie;
+import at.ac.fhcampuswien.fhmdb.observer.ObservableMessages;
+import at.ac.fhcampuswien.fhmdb.observer.Observer;
 import com.jfoenix.controls.*;
 import com.jfoenix.transitions.hamburger.HamburgerBasicCloseTransition;
 import javafx.animation.TranslateTransition;
@@ -15,7 +17,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class MainController {
+public class MainController implements Observer {
     @FXML
     public JFXHamburger hamburgerMenu;
 
@@ -118,5 +120,10 @@ public class MainController {
     @FXML
     public void navigateToMovielist() {
         setContent(UIComponent.MOVIELIST.path);
+    }
+
+    // refreshes according to changes in watchlist
+    @Override
+    public void update(ObservableMessages messages) {
     }
 }

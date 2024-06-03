@@ -7,6 +7,8 @@ import at.ac.fhcampuswien.fhmdb.database.*;
 import at.ac.fhcampuswien.fhmdb.models.Genre;
 import at.ac.fhcampuswien.fhmdb.models.Movie;
 import at.ac.fhcampuswien.fhmdb.models.SortedState;
+import at.ac.fhcampuswien.fhmdb.observer.ObservableMessages;
+import at.ac.fhcampuswien.fhmdb.observer.Observer;
 import at.ac.fhcampuswien.fhmdb.statePattern.AscendingState;
 import at.ac.fhcampuswien.fhmdb.statePattern.DescendingState;
 import at.ac.fhcampuswien.fhmdb.statePattern.MovieSort;
@@ -21,6 +23,8 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.TextField;
 
 import java.net.URL;
@@ -28,7 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
-public class MovieListController implements Initializable {
+public class MovieListController implements Initializable, Observer {
     @FXML
     public JFXButton searchBtn;
 
@@ -77,6 +81,11 @@ public class MovieListController implements Initializable {
     public void initialize(URL url, ResourceBundle resourceBundle) {
         initializeState();
         initializeLayout();
+        try {
+            WatchlistRepository.getInstance().addObserver(this);
+        } catch (DataBaseException e) {
+            e.printStackTrace();
+        }
     }
 
     public void initializeState() {
@@ -125,28 +134,28 @@ public class MovieListController implements Initializable {
 
         // genre combobox
         Object[] genres = Genre.values();   // get all genres
-        genreComboBox.getItems().add("No filter");  // add "no filter" to the combobox
-        genreComboBox.getItems().addAll(genres);    // add all genres to the combobox
+        genreComboBox.getItems().add("No filter");  // add "no filter" to combobox
+        genreComboBox.getItems().addAll(genres);    // add all genres to combobox
         genreComboBox.setPromptText("Filter by Genre");
 
         // year combobox
-        releaseYearComboBox.getItems().add("No filter");  // add "no filter" to the combobox
+        releaseYearComboBox.getItems().add("No filter");  // add "no filter" to combobox
         // fill array with numbers from 1900 to 2023
         Integer[] years = new Integer[124];
         for (int i = 0; i < years.length; i++) {
             years[i] = 1900 + i;
         }
-        releaseYearComboBox.getItems().addAll(years);    // add all years to the combobox
+        releaseYearComboBox.getItems().addAll(years);    // add all years to combobox
         releaseYearComboBox.setPromptText("Filter by Release Year");
 
         // rating combobox
-        ratingFromComboBox.getItems().add("No filter");  // add "no filter" to the combobox
+        ratingFromComboBox.getItems().add("No filter");  // add "no filter" to combobox
         // fill array with numbers from 0 to 10
         Integer[] ratings = new Integer[11];
         for (int i = 0; i < ratings.length; i++) {
             ratings[i] = i;
         }
-        ratingFromComboBox.getItems().addAll(ratings);    // add all ratings to the combobox
+        ratingFromComboBox.getItems().addAll(ratings);    // add all ratings to combobox
         ratingFromComboBox.setPromptText("Filter by Rating");
     }
 
@@ -170,19 +179,7 @@ public class MovieListController implements Initializable {
             movieSorter.sortMovies(observableMovies);
         }
     }
-    // sort movies based on sortedState
-    // by default sorted state is NONE
-    /* afterwards it switches between ascending and descending
-    public void sortMovies(SortedState sortDirection) {
-        if (sortDirection == SortedState.ASCENDING) {
-            observableMovies.sort(Comparator.comparing(Movie::getTitle));
-            sortedState = SortedState.ASCENDING;
-        } else {
-            observableMovies.sort(Comparator.comparing(Movie::getTitle).reversed());
-            sortedState = SortedState.DESCENDING;
-        }
-    }
- */
+
     public List<Movie> filterByQuery(List<Movie> movies, String query){
         if(query == null || query.isEmpty()) return movies;
 
@@ -236,7 +233,6 @@ public class MovieListController implements Initializable {
 
         setMovies(movies);
         setMovieList(movies);
-        // applyAllFilters(searchQuery, genre);
 
         if(sortedState != SortedState.NONE) {
             sortMovies();
@@ -263,5 +259,14 @@ public class MovieListController implements Initializable {
 
     public void sortBtnClicked(ActionEvent actionEvent) {
         sortMovies();
+    }
+
+    @Override
+    public void update(ObservableMessages messages) {
+        if (messages == ObservableMessages.ADDED) {
+            new Alert(Alert.AlertType.INFORMATION, "Movie was successfully added to the Watchlist", ButtonType.OK).show();
+        } else {
+            new Alert(Alert.AlertType.WARNING, "Movie is already in Watchlist!", ButtonType.OK).show();
+        }
     }
 }

@@ -15,8 +15,8 @@ public class MyFactory implements Callback<Class<?>, Object> {
     }
 
     @Override
-    // In FhmdbApplication, greift auf Callmethode dieser Klasse
-    //gibt singleton instance of controller zurück, da kein Singleton in javafx möglich ist
+    // In FhmdbApplication, calls the call method here
+    //returns singleton of controller, as no singleton in JavaFX
     public Object call(Class<?> aClass) {
         try{
             return aClass.getDeclaredConstructor().newInstance();
